@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaliteli To-Do List</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4 max-w-md">
+    <h1 class="text-3xl font-bold text-center mb-4 text-gray-800">Görev Listem</h1>
+    <div class="flex mb-4">
+      <input type="text" id="taskInput" placeholder="Yeni görev ekle..." class="flex-1 p-2 border rounded-l">
+      <select id="categorySelect" class="p-2 border">
+        <option value="iş">İş</option>
+        <option value="kişisel">Kişisel</option>
+        <option value="diğer">Diğer</option>
+      </select>
+      <button onclick="addTask()" class="bg-blue-500 text-white p-2 rounded-r">Ekle</button>
+    </div>
+    <button onclick="filterTasks()" class="bg-green-500 text-white p-2 rounded mb-4">Tamamlanmışları Gizle/Göster</button>
+    <ul id="taskList" class="space-y-2"></ul>
+  </div>
+
+  <script>
+    // Görevler dizisi ve yerel depolama
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let showCompleted = true;
+
+    // Görevleri yükle
+    function loadTasks() {
+      const taskList = document.getElementById('taskList');
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        if (showCompleted || !task.completed) {
+          const li = document.createElement('li');
+          li.className = 'bg-white p-3 rounded shadow flex justify-between items-center';
+          li.innerHTML = `
+            <div>
+              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+              <span class="ml-2 ${task.completed ? 'line-through text-gray-500' : ''}">${task.text} (${task.category})</span>
+            </div>
+            <div>
+              <button onclick="editTask(${index})" class="bg-yellow-500 text-white p-1 rounded mr-2">Düzenle</button>
+              <button onclick="deleteTask(${index})" class="bg-red-500 text-white p-1 rounded">Sil</button>
+            </div>
+          `;
+          taskList.appendChild(li);
+        }
+      });
+    }
+
+    // Görev ekle
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const category = document.getElementById('categorySelect').value;
+      const taskText = input.value.trim();
+      if (taskText) {
+        tasks.push({ text: taskText, category, completed: false });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        input.value = '';
+        loadTasks();
+      }
+    }
+
+    // Görevi tamamla/düzenle
+    function toggleTask(index) {
+      tasks[index].completed = !tasks[index].completed;
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    // Görevi düzenle
+    function editTask(index) {
+      const newText = prompt('Görev metnini düzenle:', tasks[index].text);
+      if (newText && newText.trim()) {
+        tasks[index].text = newText.trim();
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        loadTasks();
+      }
+    }
+
+    // Görevi sil
+    function deleteTask(index) {
+      if (confirm('Bu görevi silmek istediğine emin misin?')) {
+        tasks.splice(index, 1);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        loadTasks();
+      }
+    }
+
+    // Tamamlanmış görevleri gizle/göster
+    function filterTasks() {
+      showCompleted = !showCompleted;
+      loadTasks();
+    }
+
+    // Sayfa yüklendiğinde görevleri yükle
+    loadTasks();
+  </script>
+</body>
+</html>
